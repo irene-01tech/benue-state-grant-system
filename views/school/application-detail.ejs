@@ -1,0 +1,213 @@
+<%
+var appStatusBadge = { submitted: 'badge-warning', under_review: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+var evidenceStatusBadge = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger', reupload_requested: 'badge-warning' };
+function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function fmtMoney(n) { return '₦' + Number(n || 0).toLocaleString(); }
+var itemLabels = {
+  sanitary_pads_qty: 'Sanitary Pads', reusable_pads_qty: 'Reusable Pads', soap_qty: 'Soap',
+  underwear_qty: 'Underwear', buckets_qty: 'Buckets', educational_materials_qty: 'Educational Materials',
+  other_hygiene_kits_qty: 'Other Hygiene Kits',
+};
+var requestedItems = [];
+try { requestedItems = JSON.parse(application.items_requested || '[]'); } catch (e) { requestedItems = []; }
+%>
+<div class="page-header">
+  <a href="/school_representative/applications" class="text-muted" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;margin-bottom:10px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    Back to my applications
+  </a>
+  <h1><%= application.programme_title %></h1>
+  <p class="text-muted"><span class="badge <%= appStatusBadge[application.status] %>"><%= application.status.replace('_',' ') %></span></p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px;max-width:720px;">
+
+  <div class="card">
+    <div class="card-header"><h3>Your application</h3></div>
+    <div class="card-body">
+      <div class="d-flex justify-between" style="font-size:0.85rem;padding:6px 0;">
+        <span class="text-muted">Beneficiaries requested</span><span><%= application.number_of_beneficiaries %></span>
+      </div>
+      <div class="d-flex justify-between" style="font-size:0.85rem;padding:6px 0;border-top:1px solid var(--color-border);">
+        <span class="text-muted">Submitted</span><span><%= fmtDate(application.created_at) %></span>
+      </div>
+      <div style="padding:10px 0 4px;border-top:1px solid var(--color-border);">
+        <span class="text-muted" style="font-size:0.85rem;">Items requested</span>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
+          <% requestedItems.forEach(function(item) { %><span class="badge badge-neutral"><%= item.replace(/_/g,' ') %></span><% }); %>
+        </div>
+      </div>
+      <% if (application.status === 'rejected' && application.review_comment) { %>
+        <div style="padding:10px 0 0;border-top:1px solid var(--color-border);">
+          <span class="text-muted" style="font-size:0.85rem;">Reviewer comment</span>
+          <p style="margin-top:6px;font-size:0.87rem;"><%= application.review_comment %></p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (application.status === 'submitted' || application.status === 'under_review') { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="empty-state" style="padding:24px 10px;">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <h3>Awaiting review</h3>
+          <p>Your application is being reviewed. You'll be notified by email once a decision is made.</p>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (allocation) { %>
+    <div class="card">
+      <div class="card-header"><h3>Resources allocated to you</h3></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <% itemFields.forEach(function(field) { if (allocation[field] > 0) { %>
+            <div class="d-flex justify-between" style="font-size:0.84rem;"><span class="text-muted"><%= itemLabels[field] %></span><span><%= allocation[field] %></span></div>
+          <% } }); %>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.84rem;padding-top:8px;border-top:1px solid var(--color-border);">
+          <span class="text-muted">Budget allocated</span><span><%= fmtMoney(allocation.budget_allocated) %></span>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.84rem;">
+          <span class="text-muted">Expected delivery</span><span><%= fmtDate(allocation.expected_delivery_date) %></span>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Record distribution -->
+  <% if (allocation && !distribution) { %>
+    <div class="card">
+      <div class="card-header"><h3>Confirm receipt &amp; record distribution</h3></div>
+      <div class="card-body">
+        <form action="/school_representative/applications/<%= application.application_id %>/distribution" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <p class="form-hint" style="margin-bottom:14px;">Enter what you actually received — it may differ from the allocation above.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <% itemFields.forEach(function(field) { %>
+              <div class="form-group">
+                <label class="form-label" for="received_<%= field %>"><%= itemLabels[field] %> received</label>
+                <input class="form-control" type="number" min="0" id="received_<%= field %>" name="received_<%= field %>" value="<%= allocation[field] %>">
+              </div>
+            <% }); %>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="distributionDate">Distribution date *</label>
+              <input class="form-control" type="date" id="distributionDate" name="distributionDate" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="studentsServed">Students served *</label>
+              <input class="form-control" type="number" min="0" id="studentsServed" name="studentsServed" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="remarks">Remarks <span class="optional">(optional)</span></label>
+            <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Confirm receipt</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Upload evidence -->
+  <% if (distribution) { %>
+    <div class="card">
+      <div class="card-header"><h3>Upload evidence</h3></div>
+      <div class="card-body">
+        <form action="/school_representative/applications/<%= application.application_id %>/evidence" method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label class="form-label" for="files">Photos, PDF, or Excel files</label>
+            <input class="form-control" type="file" id="files" name="files" multiple accept=".jpg,.jpeg,.png,.pdf,.xlsx">
+            <p class="form-hint">Up to 5 files, 10MB each. JPG, PNG, PDF, or XLSX only.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="evDescription">Description <span class="optional">(optional)</span></label>
+            <input class="form-control" type="text" id="evDescription" name="description" placeholder="e.g. Distribution to SS2 students, 14 March">
+          </div>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+
+        <% if (evidence.length) { %>
+          <div class="table-wrap" style="margin-top:20px;">
+            <table class="data-table">
+              <thead><tr><th>File</th><th>Uploaded</th><th>Status</th></tr></thead>
+              <tbody>
+                <% evidence.forEach(function(ev) { %>
+                  <tr>
+                    <td class="cell-primary"><a href="<%= ev.file_path %>" target="_blank" rel="noopener"><%= ev.file_name %></a></td>
+                    <td class="cell-muted"><%= fmtDate(ev.created_at) %></td>
+                    <td>
+                      <span class="badge <%= evidenceStatusBadge[ev.verification_status] %>"><%= ev.verification_status.replace('_',' ') %></span>
+                      <% if (ev.verification_comment) { %><br><span class="cell-muted"><%= ev.verification_comment %></span><% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Impact survey -->
+  <% if (evidenceApproved && !impactSurvey) { %>
+    <div class="card">
+      <div class="card-header"><h3>Impact survey</h3></div>
+      <div class="card-body">
+        <form action="/school_representative/applications/<%= application.application_id %>/impact-survey" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="attendanceImprovement">Attendance improvement</label>
+              <select class="form-control" id="attendanceImprovement" name="attendanceImprovement">
+                <option value="none">None</option>
+                <option value="slight">Slight</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="significant">Significant</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="confidenceImprovement">Confidence improvement</label>
+              <select class="form-control" id="confidenceImprovement" name="confidenceImprovement">
+                <option value="none">None</option>
+                <option value="slight">Slight</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="significant">Significant</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="girlsImpacted">Girls impacted</label>
+            <input class="form-control" type="number" min="0" id="girlsImpacted" name="girlsImpacted" value="<%= application.number_of_beneficiaries %>">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="feedbackNotes">Feedback notes <span class="optional">(optional)</span></label>
+            <textarea class="form-control" id="feedbackNotes" name="feedbackNotes" rows="3" placeholder="What changed for your students?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit impact survey</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (impactSurvey) { %>
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:14px;align-items:flex-start;">
+        <span class="stat-icon bg-success" style="flex-shrink:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        </span>
+        <div>
+          <h3 style="font-size:0.95rem;margin-bottom:4px;">Impact survey submitted</h3>
+          <p class="text-muted" style="font-size:0.85rem;">Thank you — this grant's lifecycle is now complete.</p>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+</div>

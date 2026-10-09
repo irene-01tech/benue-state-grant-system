@@ -1,0 +1,86 @@
+<div class="page-header">
+  <h1>Welcome<%= school ? ', ' + school.school_name : '' %></h1>
+  <p class="text-muted">Here's where your grants and applications stand today.</p>
+</div>
+
+<% if (!school) { %>
+  <div class="card">
+    <div class="empty-state">
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      </div>
+      <h3>Your school profile couldn't be found</h3>
+      <p>Please contact the Super Administrator if you believe this is an error.</p>
+    </div>
+  </div>
+<% } else { %>
+
+  <div class="stat-grid">
+    <div class="card stat-card">
+      <span class="stat-icon bg-success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+      </span>
+      <div>
+        <div class="stat-value"><%= stats.activeGrants %></div>
+        <div class="stat-label">Active grants</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-icon bg-warning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </span>
+      <div>
+        <div class="stat-value"><%= stats.pendingApplications %></div>
+        <div class="stat-label">Pending applications</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-icon bg-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      </span>
+      <div>
+        <div class="stat-value"><%= stats.receivedResources %></div>
+        <div class="stat-label">Distributions recorded</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-icon bg-accent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 11h6M9 15h6"/></svg>
+      </span>
+      <div>
+        <div class="stat-value"><%= stats.surveysCompleted %></div>
+        <div class="stat-label">Needs assessments</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="display:flex;gap:16px;flex-wrap:wrap;">
+      <a href="/school_representative/needs-assessment" class="btn btn-outline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 11h6M9 15h6"/></svg>
+        Complete needs assessment
+      </a>
+      <a href="/school_representative/programmes" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Browse grant programmes
+      </a>
+      <a href="/school_representative/applications" class="btn btn-outline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+        Track my applications
+      </a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>About <%= school.school_name %></h3></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
+        <div><span class="text-muted" style="font-size:0.78rem;display:block;">LGA</span><span style="font-weight:600;"><%= school.lga %></span></div>
+        <div><span class="text-muted" style="font-size:0.78rem;display:block;">Type</span><span style="font-weight:600;text-transform:capitalize;"><%= school.school_type %></span></div>
+        <div><span class="text-muted" style="font-size:0.78rem;display:block;">Total students</span><span style="font-weight:600;"><%= school.total_students %></span></div>
+        <div><span class="text-muted" style="font-size:0.78rem;display:block;">Female students</span><span style="font-weight:600;"><%= school.total_female_students %></span></div>
+      </div>
+    </div>
+  </div>
+
+<% } %>

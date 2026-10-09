@@ -1,0 +1,57 @@
+<div class="page-header">
+  <a href="/school_representative/programmes" class="text-muted" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;margin-bottom:10px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    Back to programmes
+  </a>
+  <h1>Apply — <%= programme.title %></h1>
+  <p class="text-muted"><%= programme.description %></p>
+</div>
+
+<div class="card" style="max-width:640px;">
+  <div class="card-body">
+    <form action="/school_representative/programmes/<%= programme.programme_id %>/apply" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="form-group">
+        <label class="form-label" for="numberOfBeneficiaries">Number of beneficiaries *</label>
+        <input class="form-control" type="number" min="1" id="numberOfBeneficiaries" name="numberOfBeneficiaries" value="<%= school.total_female_students || '' %>" required>
+        <p class="form-hint">Defaults to your total female students — adjust if this request targets a smaller group.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Items requested *</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px;">
+          <% itemOptions.forEach(function(item) { %>
+            <label class="checkbox-row" style="font-size:0.85rem;">
+              <input type="checkbox" name="items" value="<%= item.key %>">
+              <%= item.label %>
+            </label>
+          <% }); %>
+        </div>
+      </div>
+
+      <% if (latestSurvey) { %>
+        <div class="form-group">
+          <label class="checkbox-row">
+            <input type="checkbox" name="surveyId" value="<%= latestSurvey.survey_id %>" checked>
+            Reference my most recent needs assessment (submitted <%= new Date(latestSurvey.created_at).toLocaleDateString('en-GB') %>)
+          </label>
+        </div>
+      <% } else { %>
+        <div class="card" style="background:var(--color-bg);border:none;padding:14px 16px;margin-bottom:18px;">
+          <p class="text-muted" style="font-size:0.82rem;margin:0;">
+            You haven't submitted a needs assessment yet. It's not required, but including one strengthens your application.
+            <a href="/school_representative/needs-assessment">Complete one now</a>.
+          </p>
+        </div>
+      <% } %>
+
+      <div class="form-group">
+        <label class="form-label" for="reasonForRequest">Reason for request *</label>
+        <textarea class="form-control" id="reasonForRequest" name="reasonForRequest" rows="4" placeholder="Explain why your school needs this support" required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Submit application</button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+<%
+function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+%>
+<div class="page-header">
+  <h1>Available Grant Programmes</h1>
+  <p class="text-muted"><% if (school) { %>Showing programmes open to <strong><%= school.lga %></strong> or all LGAs.<% } %></p>
+</div>
+
+<% if (programmes.length) { %>
+  <div class="stat-grid">
+    <% programmes.forEach(function(p) { %>
+      <div class="card" style="padding:22px;">
+        <div class="d-flex justify-between align-center" style="margin-bottom:8px;">
+          <span class="badge badge-neutral"><%= p.category_name %></span>
+          <span class="badge <%= p.owner_name ? 'badge-neutral' : '' %>"><%= p.owner_name %></span>
+        </div>
+        <h3 style="font-size:1.02rem;margin-bottom:6px;"><%= p.title %></h3>
+        <p class="text-muted" style="font-size:0.85rem;margin-bottom:16px;min-height:40px;"><%= (p.description || 'No description provided.').slice(0, 110) %><%= (p.description || '').length > 110 ? '…' : '' %></p>
+        <div class="d-flex justify-between" style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:16px;">
+          <span>Window: <%= fmtDate(p.start_date) %> – <%= fmtDate(p.end_date) %></span>
+        </div>
+        <a href="/school_representative/programmes/<%= p.programme_id %>/apply" class="btn btn-primary btn-block btn-sm">Apply now</a>
+      </div>
+    <% }); %>
+  </div>
+<% } else { %>
+  <div class="card">
+    <%- include('../partials/empty-state', { message: 'No grant programmes are currently open for your LGA. Check back soon.' }) %>
+  </div>
+<% } %>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/auth-head') %>
+</head>
+<body>
+  <%- include('../partials/flash-toast') %>
+
+  <div class="auth-shell">
+    <aside class="auth-visual">
+      <div class="auth-visual-brand">
+        <span class="logo-mark">BG</span>
+        <span><%= appName %></span>
+      </div>
+
+      <div class="auth-visual-content">
+        <h2>Every school served is a girl who doesn't miss class.</h2>
+        <p>One portal connects the Benue State Government, NGOs and secondary schools — from needs assessment to verified impact — so menstrual poverty grants reach the students who need them, on record, every time.</p>
+      </div>
+
+      <div class="auth-stats">
+        <div class="item"><strong>3</strong><span>partner types, one workflow</span></div>
+        <div class="item"><strong>7</strong><span>stages tracked per grant</span></div>
+        <div class="item"><strong>100%</strong><span>evidence-verified distribution</span></div>
+      </div>
+    </aside>
+
+    <section class="auth-form-side">
+      <div class="auth-form-card">
+        <div class="mobile-brand">
+          <span class="logo-mark">BG</span>
+          <span style="font-family:var(--font-heading);font-weight:600;"><%= appName %></span>
+        </div>
+
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in to continue to your dashboard.</p>
+
+        <form action="/auth/login" method="POST" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email address</label>
+            <div class="input-with-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M4 6l8 7 8-7M4 6h16v12H4z"/></svg>
+              <input class="form-control" type="email" id="email" name="email" placeholder="you@example.org" required autofocus>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-with-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+              <input class="form-control" type="password" id="password" name="password" placeholder="Enter your password" required>
+              <button type="button" class="password-toggle" data-toggle-for="password" aria-label="Show password">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="d-flex justify-between align-center" style="margin-bottom:22px;">
+            <label class="checkbox-row">
+              <input type="checkbox" name="rememberMe">
+              Remember me
+            </label>
+            <a href="/auth/forgot-password" style="font-size:0.85rem;">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+        </form>
+
+        <div class="auth-divider">New to the portal?</div>
+
+        <a href="/auth/register" class="btn btn-outline btn-block">Register your organisation</a>
+
+        <p class="auth-footer-link">
+          Grant Processing &amp; Management System for Addressing Menstrual Poverty in Benue State Secondary Schools
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<%
+var roleLabels = {
+  super_admin: 'Super Administrator',
+  ngo_govt: 'NGO / Government',
+  private_org: 'Private Organisation',
+  school_representative: 'School Representative',
+};
+var initials = (profileUser.full_name || '?').split(' ').filter(Boolean).slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+function fmtDateTime(d) { if (!d) return 'Never'; var dt = new Date(d); return dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+%>
+<div class="page-header">
+  <h1>My Profile</h1>
+  <p class="text-muted">Manage your personal details and account security.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:0.9fr 1.4fr;gap:20px;align-items:start;" class="dashboard-grid">
+
+  <div class="card">
+    <div class="card-body" style="text-align:center;">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto 16px;"><%= initials %></div>
+      <h3 style="margin-bottom:4px;"><%= profileUser.full_name %></h3>
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:4px;"><%= profileUser.email %></p>
+      <span class="badge badge-neutral"><%= roleLabels[profileUser.role_name] || profileUser.role_name %></span>
+
+      <div style="text-align:left;margin-top:22px;padding-top:18px;border-top:1px solid var(--color-border);">
+        <div class="d-flex justify-between" style="font-size:0.82rem;padding:6px 0;">
+          <span class="text-muted">Account status</span>
+          <span class="badge <%= profileUser.status === 'active' ? 'badge-success' : 'badge-warning' %>"><%= profileUser.status %></span>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.82rem;padding:6px 0;">
+          <span class="text-muted">Last login</span>
+          <span><%= fmtDateTime(profileUser.last_login) %></span>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.82rem;padding:6px 0;">
+          <span class="text-muted">Member since</span>
+          <span><%= fmtDateTime(profileUser.created_at) %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card">
+      <div class="card-header"><h3>Personal details</h3></div>
+      <div class="card-body">
+        <form action="/account/profile" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="fullName">Full name</label>
+              <input class="form-control" type="text" id="fullName" name="fullName" value="<%= profileUser.full_name %>" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone number</label>
+              <input class="form-control" type="tel" id="phone" name="phone" value="<%= profileUser.phone || '' %>">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email address</label>
+            <input class="form-control" type="email" id="email" value="<%= profileUser.email %>" disabled>
+            <p class="form-hint">Your email address is fixed to your account and can't be changed here.</p>
+          </div>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Change password</h3></div>
+      <div class="card-body">
+        <form action="/account/profile/change-password" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label class="form-label" for="currentPassword">Current password</label>
+            <input class="form-control" type="password" id="currentPassword" name="currentPassword" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="newPassword">New password</label>
+              <input class="form-control" type="password" id="newPassword" name="newPassword" minlength="8" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="confirmNewPassword">Confirm new password</label>
+              <input class="form-control" type="password" id="confirmNewPassword" name="confirmNewPassword" minlength="8" required>
+            </div>
+          </div>
+          <p class="form-hint" style="margin-bottom:14px;">At least 8 characters, with an uppercase letter, a lowercase letter, and a number.</p>
+          <button type="submit" class="btn btn-outline">Update password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr !important; } }
+</style>

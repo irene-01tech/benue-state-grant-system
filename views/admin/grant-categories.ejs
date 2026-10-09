@@ -1,0 +1,76 @@
+<div class="page-header">
+  <h1>Grant Categories</h1>
+  <p class="text-muted">The taxonomy every grant programme is filed under. NGOs and agencies pick from this list when creating a programme.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:0.9fr 1.4fr;gap:20px;align-items:start;" class="dashboard-grid">
+  <div class="card">
+    <div class="card-header"><h3>New category</h3></div>
+    <div class="card-body">
+      <form action="/super_admin/grant-categories" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-group">
+          <label class="form-label" for="categoryName">Category name</label>
+          <input class="form-control" type="text" id="categoryName" name="categoryName" placeholder="e.g. Sanitary Products" required maxlength="150">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="description">Description <span class="optional">(optional)</span></label>
+          <textarea class="form-control" id="description" name="description" rows="3" placeholder="What kinds of programmes belong here?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Add category</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>All categories</h3></div>
+    <div class="card-body" style="padding:0;">
+      <% if (categories.length) { %>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Description</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <% categories.forEach(function(c) { %>
+                <tr>
+                  <td class="cell-primary"><%= c.category_name %></td>
+                  <td class="cell-muted"><%= c.description || '—' %></td>
+                  <td><span class="badge <%= c.is_active ? 'badge-success' : 'badge-neutral' %>"><%= c.is_active ? 'Active' : 'Inactive' %></span></td>
+                  <td>
+                    <div class="d-flex gap-8">
+                      <form action="/super_admin/grant-categories/<%= c.category_id %>/toggle" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="btn btn-outline btn-sm"><%= c.is_active ? 'Deactivate' : 'Activate' %></button>
+                      </form>
+                      <form action="/super_admin/grant-categories/<%= c.category_id %>/delete" method="POST" class="delete-form">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="button" class="btn btn-danger btn-sm js-delete-category" data-name="<%= c.category_name %>">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <%- include('../partials/empty-state', { message: 'No grant categories yet. Add one to let NGOs and agencies start creating programmes.' }) %>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.js-delete-category');
+    if (!btn) return;
+    confirmAction(btn.closest('form'), {
+      title: 'Delete this category?',
+      text: '"' + btn.dataset.name + '" will be removed. Categories in use by a programme can\'t be deleted — deactivate them instead.',
+      icon: 'warning', confirmText: 'Delete', danger: true,
+    });
+  });
+</script>

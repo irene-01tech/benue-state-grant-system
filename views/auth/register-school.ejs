@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/auth-head') %>
+</head>
+<body>
+  <%- include('../partials/flash-toast') %>
+
+  <div class="auth-shell">
+    <aside class="auth-visual">
+      <div class="auth-visual-brand">
+        <span class="logo-mark">BG</span>
+        <span><%= appName %></span>
+      </div>
+
+      <div class="auth-visual-content">
+        <h2>Register your school.</h2>
+        <p>Tell us about your school so we can verify your account. Once the Super Administrator approves your registration, a login and temporary password will be emailed to you.</p>
+      </div>
+
+      <div class="auth-stats">
+        <div class="item"><strong>Step 1</strong><span>Register &amp; wait for approval</span></div>
+        <div class="item"><strong>Step 2</strong><span>Complete a needs assessment</span></div>
+        <div class="item"><strong>Step 3</strong><span>Apply for a grant</span></div>
+      </div>
+    </aside>
+
+    <section class="auth-form-side">
+      <div class="auth-form-card" style="max-width:520px;">
+        <div class="mobile-brand">
+          <span class="logo-mark">BG</span>
+          <span style="font-family:var(--font-heading);font-weight:600;"><%= appName %></span>
+        </div>
+
+        <a href="/auth/register" class="text-muted" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;margin-bottom:14px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          Back to registration options
+        </a>
+
+        <h1>School registration</h1>
+        <p class="subtitle">Fields marked with an asterisk are required.</p>
+
+        <form action="/auth/register/school" method="POST" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <h4 style="margin:18px 0 12px;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-text-muted);">Representative details</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="fullName">Your full name *</label>
+              <input class="form-control" type="text" id="fullName" name="fullName" placeholder="e.g. Mrs. Angela Terhile" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone number *</label>
+              <input class="form-control" type="tel" id="phone" name="phone" placeholder="080..." required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email address *</label>
+            <input class="form-control" type="email" id="email" name="email" placeholder="representative@school.edu.ng" required>
+            <p class="form-hint">Your login and temporary password will be sent to this address once approved.</p>
+          </div>
+
+          <h4 style="margin:22px 0 12px;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-text-muted);">School details</h4>
+          <div class="form-group">
+            <label class="form-label" for="schoolName">School name *</label>
+            <input class="form-control" type="text" id="schoolName" name="schoolName" placeholder="e.g. Government Secondary School, North Bank" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="schoolCode">School code <span class="optional">(optional)</span></label>
+              <input class="form-control" type="text" id="schoolCode" name="schoolCode" placeholder="e.g. BN/GSS/014">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="schoolType">School type *</label>
+              <select class="form-control" id="schoolType" name="schoolType" required>
+                <option value="public" selected>Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="lga">Local Government Area *</label>
+              <select class="form-control" id="lga" name="lga" required>
+                <option value="" disabled selected>Select LGA</option>
+                <% ['Ado','Agatu','Apa','Buruku','Gboko','Guma','Gwer East','Gwer West','Katsina-Ala','Konshisha','Kwande','Logo','Makurdi','Obi','Ogbadibo','Ohimini','Oju','Okpokwu','Otukpo','Tarka','Ukum','Ushongo','Vandeikya'].forEach(function(l) { %>
+                  <option value="<%= l %>"><%= l %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="principalName">Principal's name *</label>
+              <input class="form-control" type="text" id="principalName" name="principalName" placeholder="Full name" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="address">School address <span class="optional">(optional)</span></label>
+            <input class="form-control" type="text" id="address" name="address" placeholder="Street, town">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="totalStudents">Total students *</label>
+              <input class="form-control" type="number" min="0" id="totalStudents" name="totalStudents" placeholder="0" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="totalFemaleStudents">Total female students *</label>
+              <input class="form-control" type="number" min="0" id="totalFemaleStudents" name="totalFemaleStudents" placeholder="0" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">Submit registration</button>
+        </form>
+
+        <p class="auth-footer-link">Already have an account? <a href="/auth/login">Sign in</a></p>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/auth.js"></script>
+</body>
+</html>

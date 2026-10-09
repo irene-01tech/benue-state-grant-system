@@ -1,0 +1,35 @@
+<% if ((successMessages && successMessages.length) || (errorMessages && errorMessages.length)) { %>
+  <div class="toast-container" id="toastStack">
+    <% successMessages.forEach(function(msg) { %>
+      <div class="toast success">
+        <span class="toast-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        </span>
+        <div><div class="toast-title">Success</div><div class="toast-message"><%= msg %></div></div>
+        <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+      </div>
+    <% }); %>
+    <% errorMessages.forEach(function(msg) { %>
+      <div class="toast error">
+        <span class="toast-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+        </span>
+        <div><div class="toast-title">Something's not right</div><div class="toast-message"><%= msg %></div></div>
+        <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+      </div>
+    <% }); %>
+  </div>
+  <script>
+    (function () {
+      var stack = document.getElementById('toastStack');
+      if (!stack) return;
+      Array.prototype.forEach.call(stack.querySelectorAll('.toast'), function (t) {
+        var timer = setTimeout(function () { t.classList.add('toast-hide'); }, 6000);
+        t.querySelector('.toast-close').addEventListener('click', function () {
+          clearTimeout(timer);
+          t.classList.add('toast-hide');
+        });
+      });
+    })();
+  </script>
+<% } %>

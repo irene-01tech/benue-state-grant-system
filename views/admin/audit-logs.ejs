@@ -1,0 +1,76 @@
+<%
+function fmtDateTime(d) {
+  var dt = new Date(d);
+  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' · ' +
+         dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+function actionTone(action) {
+  if (/REJECT|SUSPEND|FAIL/.test(action)) return 'badge-danger';
+  if (/APPROV|ACTIV|LOGIN/.test(action)) return 'badge-success';
+  return 'badge-neutral';
+}
+%>
+<div class="page-header">
+  <h1>Audit Logs</h1>
+  <p class="text-muted">A complete, unfiltered record of every significant transaction in the system.</p>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-filters">
+    <input type="text" class="form-control" id="actionFilter" placeholder="Filter by action (e.g. APPROVED)" value="<%= filters.action %>" style="min-width:220px;">
+    <input type="date" class="form-control" id="startDate" value="<%= filters.startDate %>">
+    <input type="date" class="form-control" id="endDate" value="<%= filters.endDate %>">
+    <button type="button" class="btn btn-primary btn-sm" id="applyFiltersBtn">Filter</button>
+    <a href="/super_admin/audit-logs" class="btn btn-outline btn-sm">Reset</a>
+  </div>
+  <span class="text-muted" style="font-size:0.82rem;"><%= pagination.total %> record<%= pagination.total === 1 ? '' : 's' %></span>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+    <% if (logs.length) { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Action</th><th>User</th><th>Role</th><th>Entity</th><th>Details</th><th>IP address</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(function(log) { %>
+              <tr>
+                <td><span class="badge <%= actionTone(log.action) %>"><%= log.action.replace(/_/g, ' ') %></span></td>
+                <td class="cell-primary"><%= log.user_name || 'System' %></td>
+                <td class="cell-muted"><%= (log.user_role || '—').replace(/_/g, ' ') %></td>
+                <td class="cell-muted"><%= log.entity_type ? (log.entity_type + (log.entity_id ? ' #' + log.entity_id : '')) : '—' %></td>
+                <td class="cell-muted"><%= log.details || '—' %></td>
+                <td class="cell-muted"><%= log.ip_address || '—' %></td>
+                <td class="cell-muted"><%= fmtDateTime(log.created_at) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" style="padding:0 22px 20px;">
+        <a class="page-btn <%= pagination.page <= 1 ? 'disabled' : '' %>" href="?page=<%= pagination.page - 1 %>&action=<%= filters.action %>&startDate=<%= filters.startDate %>&endDate=<%= filters.endDate %>">&larr;</a>
+        <span class="page-btn active"><%= pagination.page %></span>
+        <span class="cell-muted" style="padding:0 8px;">of <%= pagination.totalPages %></span>
+        <a class="page-btn <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>" href="?page=<%= pagination.page + 1 %>&action=<%= filters.action %>&startDate=<%= filters.startDate %>&endDate=<%= filters.endDate %>">&rarr;</a>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty-state', { message: 'No audit log entries match these filters.' }) %>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  document.getElementById('applyFiltersBtn').addEventListener('click', function () {
+    var params = new URLSearchParams();
+    var action = document.getElementById('actionFilter').value;
+    var startDate = document.getElementById('startDate').value;
+    var endDate = document.getElementById('endDate').value;
+    if (action) params.set('action', action);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    window.location.href = '/super_admin/audit-logs?' + params.toString();
+  });
+</script>

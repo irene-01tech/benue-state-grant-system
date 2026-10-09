@@ -1,0 +1,118 @@
+<%
+/* Role-aware navigation config. Items without an `href` are rendered
+   as inert "coming soon" entries so the full scope of each role is
+   visible without shipping dead links. */
+var navByRole = {
+  super_admin: {
+    section: 'Administration',
+    items: [
+      { label: 'Dashboard', href: '/super_admin/dashboard', key: 'dashboard', icon: 'grid' },
+      { label: 'Approvals', href: '/super_admin/approvals', key: 'approvals', icon: 'check-circle', badge: (typeof pendingApprovalsBadge !== 'undefined' ? pendingApprovalsBadge : null) },
+      { label: 'Users', href: '/super_admin/users', key: 'users', icon: 'users' },
+      { label: 'Grant Categories', href: '/super_admin/grant-categories', key: 'grant-categories', icon: 'tag' },
+      { label: 'Reports', href: '/super_admin/reports', key: 'reports', icon: 'bar-chart' },
+      { label: 'Audit Logs', href: '/super_admin/audit-logs', key: 'audit-logs', icon: 'list' },
+      { label: 'Announcements', href: '/super_admin/announcements', key: 'announcements', icon: 'megaphone' },
+      { label: 'System Settings', href: '/super_admin/settings', key: 'settings', icon: 'settings' },
+    ],
+  },
+  ngo_govt: {
+    section: 'NGO / Government',
+    items: [
+      { label: 'Dashboard', href: '/organisation/dashboard', key: 'dashboard', icon: 'grid' },
+      { label: 'Grant Programmes', href: '/organisation/programmes', key: 'programmes', icon: 'folder' },
+      { label: 'Applications', href: '/organisation/applications', key: 'applications', icon: 'inbox' },
+      { label: 'Needs Assessments', href: '/organisation/needs-assessments', key: 'needs-assessments', icon: 'clipboard' },
+      { label: 'Evidence Review', href: '/organisation/evidence', key: 'evidence', icon: 'check-square' },
+      { label: 'Approvals', href: '/organisation/approvals', key: 'approvals', icon: 'check-circle' },
+      { label: 'Settings', href: '/organisation/settings', key: 'settings', icon: 'settings' },
+    ],
+  },
+  private_org: {
+    section: 'Private Organisation',
+    items: [
+      { label: 'Dashboard', href: '/private_org/dashboard', key: 'dashboard', icon: 'grid' },
+      { label: 'Grant Programmes', href: '/private_org/programmes', key: 'programmes', icon: 'folder' },
+      { label: 'Applications', href: '/private_org/applications', key: 'applications', icon: 'inbox' },
+      { label: 'Needs Assessments', href: '/private_org/needs-assessments', key: 'needs-assessments', icon: 'clipboard' },
+      { label: 'Evidence Review', href: '/private_org/evidence', key: 'evidence', icon: 'check-square' },
+      { label: 'Settings', href: '/private_org/settings', key: 'settings', icon: 'settings' },
+    ],
+  },
+  school_representative: {
+    section: 'School Workspace',
+    items: [
+      { label: 'Dashboard', href: '/school_representative/dashboard', key: 'dashboard', icon: 'grid' },
+      { label: 'Needs Assessment', href: '/school_representative/needs-assessment', key: 'needs-assessment', icon: 'clipboard' },
+      { label: 'Grant Programmes', href: '/school_representative/programmes', key: 'programmes', icon: 'file-plus' },
+      { label: 'My Applications', href: '/school_representative/applications', key: 'applications', icon: 'inbox' },
+    ],
+  },
+};
+
+var accountItems = [
+  { label: 'My Profile', href: '/account/profile', key: 'profile', icon: 'user' },
+];
+
+var icons = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  'check-circle': '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  users: '<path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
+  'bar-chart': '<path d="M18 20V10M12 20V4M6 20v-6"/>',
+  tag: '<path d="M20.59 13.41L11 4H4v7l9.59 9.59a2 2 0 002.82 0l4.18-4.18a2 2 0 000-2.82z"/><circle cx="8.5" cy="8.5" r="1.5"/>',
+  megaphone: '<path d="M3 11l18-5v12L3 13v-2z"/><path d="M7 13v5a2 2 0 002 2h1v-6"/>',
+  clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><path d="M9 11h6M9 15h6"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09c0 .68.39 1.29 1 1.51.6.24 1.3.11 1.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06c-.44.52-.57 1.22-.33 1.82.22.61.83 1 1.51 1H21a2 2 0 010 4h-.09c-.68 0-1.29.39-1.51 1z"/>',
+  folder: '<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>',
+  inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>',
+  package: '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  'check-square': '<rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 11 12 14 17 9"/>',
+  'file-plus': '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/>',
+  user: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+};
+
+var roleLabels = {
+  super_admin: 'Super Administrator',
+  ngo_govt: 'NGO / Government',
+  private_org: 'Private Organisation',
+  school_representative: 'School Representative',
+};
+
+var role = currentUser.role_name;
+var nav = navByRole[role] || { section: '', items: [], soon: [] };
+%>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="logo-mark">BG</span>
+    <div>
+      <div class="brand-text">Benue Grant Portal</div>
+      <div class="brand-sub"><%= roleLabels[role] || '' %></div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-title"><%= nav.section %></div>
+    <% nav.items.forEach(function(item) { %>
+      <a href="<%= item.href %>" class="sidebar-link <%= activePage === item.key ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><%- icons[item.icon] || '' %></svg>
+        <span><%= item.label %></span>
+        <% if (item.badge) { %><span class="badge-count"><%= item.badge %></span><% } %>
+      </a>
+    <% }); %>
+
+    <div class="sidebar-section-title">Account</div>
+    <% accountItems.forEach(function(item) { %>
+      <a href="<%= item.href %>" class="sidebar-link <%= activePage === item.key ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><%- icons[item.icon] || '' %></svg>
+        <span><%= item.label %></span>
+      </a>
+    <% }); %>
+  </nav>
+
+  <div class="sidebar-footer">
+    Grant Processing &amp; Management System<br>
+    for Menstrual Poverty · Benue State
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

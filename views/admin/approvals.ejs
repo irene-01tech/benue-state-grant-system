@@ -1,0 +1,216 @@
+<%
+function fmtDate(d) { var dt = new Date(d); return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+var statusBadge = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+var tabs = [
+  { key: 'schools', label: 'Schools', count: counts.schools },
+  { key: 'organisations', label: 'NGO / Government', count: counts.organisations },
+  { key: 'private-orgs', label: 'Private Organisations', count: counts.privateOrgs },
+];
+%>
+<div class="page-header">
+  <h1>Registration Approvals</h1>
+  <p class="text-muted">Review and decide on registration applications from schools, NGO/Government organisations, and private organisations. NGO/Government accounts can also approve Schools and Private Organisations directly from their own dashboard.</p>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-filters" style="gap:6px;">
+    <% tabs.forEach(function(t) { %>
+      <a href="/super_admin/approvals?tab=<%= t.key %>&status=<%= status %>"
+         class="btn btn-sm <%= tab === t.key ? 'btn-primary' : 'btn-outline' %>">
+        <%= t.label %> <span style="opacity:0.75;">(<%= t.count %>)</span>
+      </a>
+    <% }); %>
+  </div>
+  <div class="toolbar-filters">
+    <select class="form-control filter-select" id="statusFilter">
+      <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Pending</option>
+      <option value="approved" <%= status === 'approved' ? 'selected' : '' %>>Approved</option>
+      <option value="rejected" <%= status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+
+    <% if (tab === 'schools') { %>
+      <% if (schools.length) { %>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>School</th><th>LGA</th><th>Principal</th><th>Representative</th><th>Students (F)</th><th>Registered</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% schools.forEach(function(s) { %>
+                <tr>
+                  <td class="cell-primary"><%= s.school_name %><br><span class="cell-muted"><%= s.school_type %><% if (s.school_code) { %> · <%= s.school_code %><% } %></span></td>
+                  <td><%= s.lga %></td>
+                  <td><%= s.principal_name || '—' %></td>
+                  <td><%= s.full_name %><br><span class="cell-muted"><%= s.email %></span></td>
+                  <td><%= s.total_students %> (<%= s.total_female_students %>)</td>
+                  <td class="cell-muted"><%= fmtDate(s.created_at) %></td>
+                  <td><span class="badge <%= statusBadge[s.approval_status] %>"><%= s.approval_status %></span></td>
+                  <td>
+                    <% if (s.approval_status === 'pending') { %>
+                      <div class="d-flex gap-8">
+                        <form action="/super_admin/approvals/schools/<%= s.school_id %>/approve" method="POST" class="approve-form">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="button" class="btn btn-success btn-sm js-approve-btn" data-name="<%= s.school_name %>" data-email="<%= s.email %>">Approve</button>
+                        </form>
+                        <button type="button" class="btn btn-danger btn-sm js-reject-btn" data-url="/super_admin/approvals/schools/<%= s.school_id %>/reject" data-name="<%= s.school_name %>">Reject</button>
+                      </div>
+                    <% } else if (s.rejection_reason) { %>
+                      <span class="cell-muted">Reason: <%= s.rejection_reason %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <%- include('../partials/empty-state', { message: 'No ' + status + ' school registrations right now.' }) %>
+      <% } %>
+    <% } %>
+
+    <% if (tab === 'organisations') { %>
+      <% if (organisations.length) { %>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Organisation</th><th>Focus area</th><th>Reg. number</th><th>Reach estimate</th><th>Contact</th><th>Registered</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% organisations.forEach(function(n) { %>
+                <tr>
+                  <td class="cell-primary"><%= n.org_name %><% if (n.website) { %><br><span class="cell-muted"><%= n.website %></span><% } %></td>
+                  <td><%= n.focus_area || '—' %></td>
+                  <td><%= n.registration_number || '—' %></td>
+                  <td><%= Number(n.reach_estimate).toLocaleString() %></td>
+                  <td><%= n.full_name %><br><span class="cell-muted"><%= n.email %></span></td>
+                  <td class="cell-muted"><%= fmtDate(n.created_at) %></td>
+                  <td><span class="badge <%= statusBadge[n.approval_status] %>"><%= n.approval_status %></span></td>
+                  <td>
+                    <% if (n.approval_status === 'pending') { %>
+                      <div class="d-flex gap-8">
+                        <form action="/super_admin/approvals/organisations/<%= n.organisation_id %>/approve" method="POST" class="approve-form">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="button" class="btn btn-success btn-sm js-approve-btn" data-name="<%= n.org_name %>" data-email="<%= n.email %>">Approve</button>
+                        </form>
+                        <button type="button" class="btn btn-danger btn-sm js-reject-btn" data-url="/super_admin/approvals/organisations/<%= n.organisation_id %>/reject" data-name="<%= n.org_name %>">Reject</button>
+                      </div>
+                    <% } else if (n.rejection_reason) { %>
+                      <span class="cell-muted">Reason: <%= n.rejection_reason %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <%- include('../partials/empty-state', { message: 'No ' + status + ' NGO/Government registrations right now.' }) %>
+      <% } %>
+    <% } %>
+
+    <% if (tab === 'private-orgs') { %>
+      <% if (privateOrgs.length) { %>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Organisation</th><th>Description</th><th>Reach estimate</th><th>Contact</th><th>Registered</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% privateOrgs.forEach(function(p) { %>
+                <tr>
+                  <td class="cell-primary"><%= p.org_name %></td>
+                  <td class="cell-muted"><%= p.description || '—' %></td>
+                  <td><%= Number(p.reach_estimate).toLocaleString() %></td>
+                  <td><%= p.full_name %><br><span class="cell-muted"><%= p.email %></span></td>
+                  <td class="cell-muted"><%= fmtDate(p.created_at) %></td>
+                  <td><span class="badge <%= statusBadge[p.approval_status] %>"><%= p.approval_status %></span></td>
+                  <td>
+                    <% if (p.approval_status === 'pending') { %>
+                      <div class="d-flex gap-8">
+                        <form action="/super_admin/approvals/private-orgs/<%= p.private_org_id %>/approve" method="POST" class="approve-form">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button type="button" class="btn btn-success btn-sm js-approve-btn" data-name="<%= p.org_name %>" data-email="<%= p.email %>">Approve</button>
+                        </form>
+                        <button type="button" class="btn btn-danger btn-sm js-reject-btn" data-url="/super_admin/approvals/private-orgs/<%= p.private_org_id %>/reject" data-name="<%= p.org_name %>">Reject</button>
+                      </div>
+                    <% } else if (p.rejection_reason) { %>
+                      <span class="cell-muted">Reason: <%= p.rejection_reason %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <%- include('../partials/empty-state', { message: 'No ' + status + ' private organisation registrations right now.' }) %>
+      <% } %>
+    <% } %>
+
+  </div>
+</div>
+
+<!-- Reject reason modal -->
+<div class="modal-backdrop" id="rejectModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Reject registration</h3>
+      <button type="button" class="modal-close" onclick="closeRejectModal()">&times;</button>
+    </div>
+    <form id="rejectForm" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="modal-body">
+        <p class="text-muted" id="rejectModalSubtitle" style="margin-bottom:16px;"></p>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="reason">Reason for rejection</label>
+          <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="Explain why this application is being rejected — this will be included in the notification email." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeRejectModal()">Cancel</button>
+        <button type="submit" class="btn btn-danger">Reject registration</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('statusFilter').addEventListener('change', function () {
+    window.location.href = '/super_admin/approvals?tab=<%= tab %>&status=' + this.value;
+  });
+
+  document.addEventListener('click', function (e) {
+    var approveBtn = e.target.closest('.js-approve-btn');
+    if (approveBtn) {
+      var form = approveBtn.closest('form');
+      confirmAction(form, {
+        title: 'Approve ' + approveBtn.dataset.name + '?',
+        text: 'A temporary password will be generated and emailed to ' + approveBtn.dataset.email + '.',
+        icon: 'question',
+        confirmText: 'Approve',
+      });
+      return;
+    }
+    var rejectBtn = e.target.closest('.js-reject-btn');
+    if (rejectBtn) {
+      openRejectModal(rejectBtn.dataset.url, rejectBtn.dataset.name);
+    }
+  });
+
+  function openRejectModal(actionUrl, name) {
+    var modal = document.getElementById('rejectModal');
+    var form = document.getElementById('rejectForm');
+    form.action = actionUrl;
+    document.getElementById('rejectModalSubtitle').textContent = 'You are rejecting the registration for ' + name + '. They will receive an email with your reason.';
+    document.getElementById('reason').value = '';
+    modal.classList.add('open');
+  }
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.remove('open');
+  }
+</script>

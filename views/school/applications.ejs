@@ -1,0 +1,39 @@
+<%
+var appStatusBadge = { submitted: 'badge-warning', under_review: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+%>
+<div class="page-header">
+  <div class="d-flex justify-between align-center" style="flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>My Applications</h1>
+      <p class="text-muted">Track every grant application you've submitted.</p>
+    </div>
+    <a href="/school_representative/programmes" class="btn btn-primary btn-sm">Browse programmes</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+    <% if (applications.length) { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Programme</th><th>Funded by</th><th>Beneficiaries</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% applications.forEach(function(a) { %>
+              <tr>
+                <td class="cell-primary"><%= a.programme_title %></td>
+                <td><%= a.owner_name %> <span class="cell-muted">(<%= a.owner_type === 'ngo_govt' ? 'NGO / Government' : 'Private Org' %>)</span></td>
+                <td><%= a.number_of_beneficiaries %></td>
+                <td class="cell-muted"><%= fmtDate(a.created_at) %></td>
+                <td><span class="badge <%= appStatusBadge[a.status] %>"><%= a.status.replace('_',' ') %></span></td>
+                <td><a href="/school_representative/applications/<%= a.application_id %>" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty-state', { message: 'You haven\'t applied to any grant programmes yet.' }) %>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,155 @@
+<%
+var totalOrganisations = organisationStats.pending + organisationStats.approved + organisationStats.rejected;
+var totalPrivateOrgs = privateOrgStats.pending + privateOrgStats.approved + privateOrgStats.rejected;
+var totalSchoolsAll = schoolStats.pending + schoolStats.approved + schoolStats.rejected;
+
+function timeAgo(dateStr) {
+  var diffMs = Date.now() - new Date(dateStr).getTime();
+  var mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+%>
+<div class="page-header">
+  <h1>Super Admin Dashboard</h1>
+  <p class="text-muted">A live, system-wide view of every organisation and transaction on the platform.</p>
+</div>
+
+<div class="stat-grid">
+  <div class="card stat-card">
+    <span class="stat-icon bg-warning">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    </span>
+    <div>
+      <div class="stat-value"><%= totalPendingApprovals %></div>
+      <div class="stat-label">Pending approvals</div>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <span class="stat-icon bg-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
+    </span>
+    <div>
+      <div class="stat-value"><%= totalOrganisations %></div>
+      <div class="stat-label">NGO / Government organisations</div>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <span class="stat-icon bg-info">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>
+    </span>
+    <div>
+      <div class="stat-value"><%= totalPrivateOrgs %></div>
+      <div class="stat-label">Private organisations</div>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <span class="stat-icon bg-accent">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 4 2 10l10 6 10-6z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>
+    </span>
+    <div>
+      <div class="stat-value"><%= totalSchools %></div>
+      <div class="stat-label">Registered schools</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;" class="dashboard-grid">
+  <div class="card">
+    <div class="card-header">
+      <h3>Registrations by status</h3>
+      <a href="/super_admin/approvals" class="btn btn-outline btn-sm">Review approvals</a>
+    </div>
+    <div class="card-body">
+      <canvas id="statusChart" height="230"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Pending review</h3>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="d-flex justify-between align-center">
+        <span>Schools</span>
+        <span class="badge <%= schoolStats.pending ? 'badge-warning' : 'badge-neutral' %>"><%= schoolStats.pending %> pending</span>
+      </div>
+      <div class="d-flex justify-between align-center">
+        <span>NGO / Government</span>
+        <span class="badge <%= organisationStats.pending ? 'badge-warning' : 'badge-neutral' %>"><%= organisationStats.pending %> pending</span>
+      </div>
+      <div class="d-flex justify-between align-center">
+        <span>Private organisations</span>
+        <span class="badge <%= privateOrgStats.pending ? 'badge-warning' : 'badge-neutral' %>"><%= privateOrgStats.pending %> pending</span>
+      </div>
+      <a href="/super_admin/approvals" class="btn btn-primary btn-block" style="margin-top:6px;">Go to approval queue</a>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+  <div class="card-header">
+    <h3>Recent system activity</h3>
+    <a href="/super_admin/audit-logs" class="btn btn-outline btn-sm">View full audit log</a>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <% if (recentLogs && recentLogs.length) { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Action</th><th>By</th><th>Role</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            <% recentLogs.forEach(function(log) { %>
+              <tr>
+                <td class="cell-primary"><%= log.action.replace(/_/g, ' ') %></td>
+                <td><%= log.user_name || 'System' %></td>
+                <td><span class="badge badge-neutral"><%= (log.user_role || '—').replace(/_/g, ' ') %></span></td>
+                <td class="cell-muted"><%= timeAgo(log.created_at) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        </div>
+        <h3>No activity yet</h3>
+        <p>System actions like approvals, logins, and grant events will appear here as they happen.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+<script>
+  (function () {
+    var ctx = document.getElementById('statusChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Schools', 'NGO / Government', 'Private Organisations'],
+        datasets: [
+          { label: 'Pending', backgroundColor: '#b8894a', data: [<%= schoolStats.pending %>, <%= organisationStats.pending %>, <%= privateOrgStats.pending %>] },
+          { label: 'Approved', backgroundColor: '#3f8a5f', data: [<%= schoolStats.approved %>, <%= organisationStats.approved %>, <%= privateOrgStats.approved %>] },
+          { label: 'Rejected', backgroundColor: '#a13d3d', data: [<%= schoolStats.rejected %>, <%= organisationStats.rejected %>, <%= privateOrgStats.rejected %>] },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+      },
+    });
+  })();
+</script>

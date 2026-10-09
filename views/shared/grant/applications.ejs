@@ -1,0 +1,44 @@
+<%
+var appStatusBadge = { submitted: 'badge-warning', under_review: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+%>
+<div class="page-header">
+  <h1>Applications</h1>
+  <p class="text-muted">Every school application submitted across all of your programmes.</p>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-filters" style="gap:6px;">
+    <a href="<%= basePath %>/applications" class="btn btn-sm <%= statusFilter === '' ? 'btn-primary' : 'btn-outline' %>">All</a>
+    <a href="<%= basePath %>/applications?status=submitted" class="btn btn-sm <%= statusFilter === 'submitted' ? 'btn-primary' : 'btn-outline' %>">Submitted</a>
+    <a href="<%= basePath %>/applications?status=under_review" class="btn btn-sm <%= statusFilter === 'under_review' ? 'btn-primary' : 'btn-outline' %>">Under review</a>
+    <a href="<%= basePath %>/applications?status=approved" class="btn btn-sm <%= statusFilter === 'approved' ? 'btn-primary' : 'btn-outline' %>">Approved</a>
+    <a href="<%= basePath %>/applications?status=rejected" class="btn btn-sm <%= statusFilter === 'rejected' ? 'btn-primary' : 'btn-outline' %>">Rejected</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+    <% if (applications.length) { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>School</th><th>Programme</th><th>LGA</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% applications.forEach(function(a) { %>
+              <tr>
+                <td class="cell-primary"><%= a.school_name %></td>
+                <td><%= a.programme_title %></td>
+                <td><%= a.lga %></td>
+                <td class="cell-muted"><%= fmtDate(a.created_at) %></td>
+                <td><span class="badge <%= appStatusBadge[a.status] %>"><%= a.status.replace('_', ' ') %></span></td>
+                <td><a href="<%= basePath %>/applications/<%= a.application_id %>" class="btn btn-outline btn-sm">Review</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { message: 'No applications ' + (statusFilter ? 'with this status ' : '') + 'yet.' }) %>
+    <% } %>
+  </div>
+</div>

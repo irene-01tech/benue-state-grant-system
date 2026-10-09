@@ -1,0 +1,42 @@
+<%
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+var statusBadge = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+%>
+<div class="page-header">
+  <h1>Needs Assessments</h1>
+  <p class="text-muted">Reviews submitted directly to you by schools requesting your support.</p>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-filters" style="gap:6px;">
+    <a href="<%= basePath %>/needs-assessments?status=pending" class="btn btn-sm <%= statusFilter === 'pending' ? 'btn-primary' : 'btn-outline' %>">Pending</a>
+    <a href="<%= basePath %>/needs-assessments?status=approved" class="btn btn-sm <%= statusFilter === 'approved' ? 'btn-primary' : 'btn-outline' %>">Approved</a>
+    <a href="<%= basePath %>/needs-assessments?status=rejected" class="btn btn-sm <%= statusFilter === 'rejected' ? 'btn-primary' : 'btn-outline' %>">Rejected</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+    <% if (surveys.length) { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>School</th><th>LGA</th><th>Girls needing support</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% surveys.forEach(function(s) { %>
+              <tr>
+                <td class="cell-primary"><%= s.school_name %></td>
+                <td><%= s.lga %></td>
+                <td><%= s.girls_needing_support %></td>
+                <td class="cell-muted"><%= fmtDate(s.created_at) %></td>
+                <td><span class="badge <%= statusBadge[s.status] %>"><%= s.status %></span></td>
+                <td><a href="<%= basePath %>/needs-assessments/<%= s.survey_id %>" class="btn btn-outline btn-sm">Review</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { message: 'No ' + statusFilter + ' needs assessments right now.' }) %>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+<%
+var statusBadge = { draft: 'badge-neutral', active: 'badge-success', closed: 'badge-warning', archived: 'badge-neutral' };
+function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function fmtMoney(n) { return '₦' + Number(n || 0).toLocaleString(); }
+%>
+<div class="page-header">
+  <div class="d-flex justify-between align-center" style="flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Grant Programmes</h1>
+      <p class="text-muted">Create and manage the programmes schools can apply to.</p>
+    </div>
+    <a href="<%= basePath %>/programmes/new" class="btn btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      New programme
+    </a>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-filters" style="gap:6px;">
+    <a href="<%= basePath %>/programmes" class="btn btn-sm <%= statusFilter === '' ? 'btn-primary' : 'btn-outline' %>">All</a>
+    <a href="<%= basePath %>/programmes?status=draft" class="btn btn-sm <%= statusFilter === 'draft' ? 'btn-primary' : 'btn-outline' %>">Draft</a>
+    <a href="<%= basePath %>/programmes?status=active" class="btn btn-sm <%= statusFilter === 'active' ? 'btn-primary' : 'btn-outline' %>">Active</a>
+    <a href="<%= basePath %>/programmes?status=closed" class="btn btn-sm <%= statusFilter === 'closed' ? 'btn-primary' : 'btn-outline' %>">Closed</a>
+    <a href="<%= basePath %>/programmes?status=archived" class="btn btn-sm <%= statusFilter === 'archived' ? 'btn-primary' : 'btn-outline' %>">Archived</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+    <% if (programmes.length) { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Programme</th><th>Category</th><th>Budget</th><th>Applications</th><th>Window</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% programmes.forEach(function(p) { %>
+              <tr>
+                <td class="cell-primary"><%= p.title %></td>
+                <td><%= p.category_name %></td>
+                <td><%= fmtMoney(p.total_budget) %><br><span class="cell-muted"><%= fmtMoney(p.budget_utilized) %> used</span></td>
+                <td><%= p.application_count %><% if (p.pending_count > 0) { %> <span class="badge badge-warning"><%= p.pending_count %> pending</span><% } %></td>
+                <td class="cell-muted"><%= fmtDate(p.start_date) %> – <%= fmtDate(p.end_date) %></td>
+                <td><span class="badge <%= statusBadge[p.status] %>"><%= p.status %></span></td>
+                <td><a href="<%= basePath %>/programmes/<%= p.programme_id %>" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { message: 'No programmes yet. Create your first grant programme to start receiving applications from schools.' }) %>
+    <% } %>
+  </div>
+</div>

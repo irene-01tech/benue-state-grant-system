@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> · Grant Management Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+  <div class="auth-shell" style="grid-template-columns:1fr;">
+    <section class="auth-form-side" style="width:100%;">
+      <div class="auth-form-card" style="text-align:center;">
+        <div class="mobile-brand" style="justify-content:center;">
+          <span class="logo-mark"><%= statusCode >= 500 ? '!' : statusCode %></span>
+        </div>
+        <h1><%= statusCode === 404 ? 'Page not found' : 'Something went wrong' %></h1>
+        <p class="subtitle"><%= message %></p>
+        <a href="javascript:history.back()" class="btn btn-outline btn-block" style="margin-bottom:10px;">Go back</a>
+        <a href="/" class="btn btn-primary btn-block">Return home</a>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

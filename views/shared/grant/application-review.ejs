@@ -1,0 +1,264 @@
+<%
+var appStatusBadge = { submitted: 'badge-warning', under_review: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+var evidenceStatusBadge = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger', reupload_requested: 'badge-warning' };
+function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function fmtMoney(n) { return '₦' + Number(n || 0).toLocaleString(); }
+var itemLabels = {
+  sanitary_pads_qty: 'Sanitary Pads', reusable_pads_qty: 'Reusable Pads', soap_qty: 'Soap',
+  underwear_qty: 'Underwear', buckets_qty: 'Buckets', educational_materials_qty: 'Educational Materials',
+  other_hygiene_kits_qty: 'Other Hygiene Kits',
+};
+var requestedItems = [];
+try { requestedItems = JSON.parse(application.items_requested || '[]'); } catch (e) { requestedItems = []; }
+var itemsReceived = {};
+if (distribution) { try { itemsReceived = JSON.parse(distribution.items_received || '{}'); } catch (e) { itemsReceived = {}; } }
+%>
+<div class="page-header">
+  <a href="<%= basePath %>/applications" class="text-muted" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;margin-bottom:10px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    Back to applications
+  </a>
+  <div class="d-flex justify-between align-center" style="flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1><%= application.school_name %></h1>
+      <p class="text-muted">Applying to <strong><%= application.programme_title %></strong> · <span class="badge <%= appStatusBadge[application.status] %>"><%= application.status.replace('_',' ') %></span></p>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;" class="dashboard-grid">
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- Application details -->
+    <div class="card">
+      <div class="card-header"><h3>Application details</h3></div>
+      <div class="card-body">
+        <div class="d-flex justify-between" style="font-size:0.85rem;padding:6px 0;">
+          <span class="text-muted">School</span><span><%= application.school_name %> (<%= application.lga %>)</span>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.85rem;padding:6px 0;border-top:1px solid var(--color-border);">
+          <span class="text-muted">Students (female)</span><span><%= application.total_students %> (<%= application.total_female_students %>)</span>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.85rem;padding:6px 0;border-top:1px solid var(--color-border);">
+          <span class="text-muted">Beneficiaries requested</span><span><%= application.number_of_beneficiaries %></span>
+        </div>
+        <div class="d-flex justify-between" style="font-size:0.85rem;padding:6px 0;border-top:1px solid var(--color-border);">
+          <span class="text-muted">Submitted</span><span><%= fmtDate(application.created_at) %></span>
+        </div>
+        <div style="padding:10px 0 4px;border-top:1px solid var(--color-border);">
+          <span class="text-muted" style="font-size:0.85rem;">Items requested</span>
+          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
+            <% requestedItems.forEach(function(item) { %><span class="badge badge-neutral"><%= item.replace(/_/g,' ') %></span><% }); %>
+          </div>
+        </div>
+        <div style="padding:10px 0 0;border-top:1px solid var(--color-border);">
+          <span class="text-muted" style="font-size:0.85rem;">Reason for request</span>
+          <p style="margin-top:6px;font-size:0.87rem;"><%= application.reason_for_request %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision -->
+    <% if (application.status === 'submitted' || application.status === 'under_review') { %>
+      <div class="card">
+        <div class="card-header"><h3>Review decision</h3></div>
+        <div class="card-body">
+          <form action="<%= basePath %>/applications/<%= application.application_id %>/decide" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-group">
+              <label class="form-label" for="comment">Comment <span class="optional">(shown to the school)</span></label>
+              <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Optional note about your decision"></textarea>
+            </div>
+            <div class="d-flex gap-8">
+              <button type="submit" name="decision" value="approved" class="btn btn-success">Approve application</button>
+              <button type="submit" name="decision" value="rejected" class="btn btn-danger">Reject application</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <div class="card-body" style="display:flex;gap:14px;align-items:flex-start;">
+          <span class="stat-icon <%= application.status === 'approved' ? 'bg-success' : 'bg-danger' %>" style="flex-shrink:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <div>
+            <h3 style="font-size:0.95rem;margin-bottom:4px;">Application <%= application.status %></h3>
+            <p class="text-muted" style="font-size:0.85rem;">Reviewed <%= fmtDate(application.reviewed_at) %><% if (application.review_comment) { %> — "<%= application.review_comment %>"<% } %></p>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Allocation -->
+    <% if (application.status === 'approved' && !allocation) { %>
+      <div class="card">
+        <div class="card-header"><h3>Allocate resources</h3></div>
+        <div class="card-body">
+          <form action="<%= basePath %>/applications/<%= application.application_id %>/allocate" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <% itemFields.forEach(function(field) { %>
+                <div class="form-group">
+                  <label class="form-label" for="<%= field %>"><%= itemLabels[field] %></label>
+                  <input class="form-control" type="number" min="0" id="<%= field %>" name="<%= field %>" value="0">
+                </div>
+              <% }); %>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="otherItemsDescription">Other items <span class="optional">(optional)</span></label>
+              <input class="form-control" type="text" id="otherItemsDescription" name="otherItemsDescription" placeholder="Anything not listed above">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="budgetAllocated">Budget allocated (₦)</label>
+                <input class="form-control" type="number" min="0" step="100" id="budgetAllocated" name="budgetAllocated" value="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="expectedDeliveryDate">Expected delivery date</label>
+                <input class="form-control" type="date" id="expectedDeliveryDate" name="expectedDeliveryDate">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Confirm allocation</button>
+          </form>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (allocation) { %>
+      <div class="card">
+        <div class="card-header"><h3>Resource allocation</h3></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <% itemFields.forEach(function(field) { if (allocation[field] > 0) { %>
+              <div class="d-flex justify-between" style="font-size:0.84rem;"><span class="text-muted"><%= itemLabels[field] %></span><span><%= allocation[field] %></span></div>
+            <% } }); %>
+          </div>
+          <% if (allocation.other_items_description) { %><p class="cell-muted" style="margin-bottom:8px;">Other: <%= allocation.other_items_description %></p><% } %>
+          <div class="d-flex justify-between" style="font-size:0.84rem;padding-top:8px;border-top:1px solid var(--color-border);">
+            <span class="text-muted">Budget allocated</span><span><%= fmtMoney(allocation.budget_allocated) %></span>
+          </div>
+          <div class="d-flex justify-between" style="font-size:0.84rem;">
+            <span class="text-muted">Expected delivery</span><span><%= fmtDate(allocation.expected_delivery_date) %></span>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Distribution -->
+    <% if (allocation && !distribution) { %>
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state" style="padding:24px 10px;">
+            <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <h3>Waiting on the school</h3>
+            <p>The school hasn't recorded receipt of this allocation yet. You'll see it here as soon as they do.</p>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (distribution) { %>
+      <div class="card">
+        <div class="card-header"><h3>Distribution record</h3></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <% itemFields.forEach(function(field) { if (itemsReceived[field] > 0) { %>
+              <div class="d-flex justify-between" style="font-size:0.84rem;"><span class="text-muted"><%= itemLabels[field] %> received</span><span><%= itemsReceived[field] %></span></div>
+            <% } }); %>
+          </div>
+          <div class="d-flex justify-between" style="font-size:0.84rem;padding-top:8px;border-top:1px solid var(--color-border);">
+            <span class="text-muted">Distribution date</span><span><%= fmtDate(distribution.distribution_date) %></span>
+          </div>
+          <div class="d-flex justify-between" style="font-size:0.84rem;">
+            <span class="text-muted">Students served</span><span><%= distribution.students_served %></span>
+          </div>
+          <% if (distribution.remarks) { %><p class="cell-muted" style="margin-top:8px;">Remarks: <%= distribution.remarks %></p><% } %>
+        </div>
+      </div>
+
+      <!-- Evidence -->
+      <div class="card">
+        <div class="card-header"><h3>Evidence (<%= evidence.length %>)</h3></div>
+        <div class="card-body" style="padding:0;">
+          <% if (evidence.length) { %>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>File</th><th>Description</th><th>Uploaded</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <% evidence.forEach(function(ev) { %>
+                    <tr>
+                      <td class="cell-primary"><a href="<%= ev.file_path %>" target="_blank" rel="noopener"><%= ev.file_name %></a></td>
+                      <td class="cell-muted"><%= ev.description || '—' %></td>
+                      <td class="cell-muted"><%= fmtDate(ev.created_at) %></td>
+                      <td><span class="badge <%= evidenceStatusBadge[ev.verification_status] %>"><%= ev.verification_status.replace('_',' ') %></span></td>
+                      <td>
+                        <% if (ev.verification_status === 'pending') { %>
+                          <button type="button" class="btn btn-outline btn-sm js-verify-evidence"
+                            data-url="<%= basePath %>/applications/<%= application.application_id %>/evidence/<%= ev.upload_id %>/verify"
+                            data-name="<%= ev.file_name %>">Review</button>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <%- include('../../partials/empty-state', { message: 'No evidence uploaded yet.' }) %>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Side info -->
+  <div class="card">
+    <div class="card-header"><h3>School representative</h3></div>
+    <div class="card-body">
+      <p style="font-weight:600;font-size:0.9rem;margin-bottom:2px;"><%= application.school_rep_name %></p>
+      <p class="text-muted" style="font-size:0.84rem;"><%= application.school_rep_email %></p>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+<!-- Evidence verification modal -->
+<div class="modal-backdrop" id="evidenceModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Review evidence</h3>
+      <button type="button" class="modal-close" onclick="document.getElementById('evidenceModal').classList.remove('open')">&times;</button>
+    </div>
+    <form id="evidenceForm" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="modal-body">
+        <p class="text-muted" id="evidenceModalSubtitle" style="margin-bottom:16px;"></p>
+        <div class="form-group">
+          <label class="form-label" for="evidenceComment">Comment <span class="optional">(shown to the school)</span></label>
+          <textarea class="form-control" id="evidenceComment" name="comment" rows="3" placeholder="Optional note"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="flex-wrap:wrap;gap:8px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('evidenceModal').classList.remove('open')">Cancel</button>
+        <button type="submit" name="decision" value="reupload_requested" class="btn btn-outline">Request re-upload</button>
+        <button type="submit" name="decision" value="rejected" class="btn btn-danger">Reject</button>
+        <button type="submit" name="decision" value="approved" class="btn btn-success">Approve</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.js-verify-evidence');
+    if (!btn) return;
+    document.getElementById('evidenceForm').action = btn.dataset.url;
+    document.getElementById('evidenceModalSubtitle').textContent = 'Reviewing "' + btn.dataset.name + '".';
+    document.getElementById('evidenceComment').value = '';
+    document.getElementById('evidenceModal').classList.add('open');
+  });
+</script>

@@ -1,0 +1,90 @@
+<%
+function fmtDateTime(d) { var dt = new Date(d); return dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+var roleLabels = { all: 'Everyone', ngo_govt: 'NGO / Government', private_org: 'Private Organisations', school_representative: 'Schools' };
+%>
+<div class="page-header">
+  <h1>Announcements</h1>
+  <p class="text-muted">Broadcast a message to everyone, or to a specific type of organisation. Each announcement is also delivered as an in-app notification.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start;" class="dashboard-grid">
+  <div class="card">
+    <div class="card-header"><h3>New announcement</h3></div>
+    <div class="card-body">
+      <form action="/super_admin/announcements" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label class="form-label" for="title">Title</label>
+          <input class="form-control" type="text" id="title" name="title" placeholder="e.g. Scheduled maintenance this weekend" required maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="message">Message</label>
+          <textarea class="form-control" id="message" name="message" rows="5" placeholder="Write your announcement..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="targetRole">Audience</label>
+          <select class="form-control" id="targetRole" name="targetRole">
+            <option value="all">Everyone</option>
+            <option value="ngo_govt">NGO / Government only</option>
+            <option value="private_org">Private Organisations only</option>
+            <option value="school_representative">Schools only</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Send announcement</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Sent announcements</h3></div>
+    <div class="card-body" style="padding:0;">
+      <% if (announcements.length) { %>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Title</th><th>Audience</th><th>Sent by</th><th>Date</th><th></th></tr></thead>
+            <tbody>
+              <% announcements.forEach(function(a) { %>
+                <tr>
+                  <td class="cell-primary"><%= a.title %><br><span class="cell-muted"><%= a.message.length > 80 ? a.message.slice(0, 80) + '…' : a.message %></span></td>
+                  <td><span class="badge badge-neutral"><%= roleLabels[a.target_role] || a.target_role %></span></td>
+                  <td><%= a.author_name %></td>
+                  <td class="cell-muted"><%= fmtDateTime(a.created_at) %></td>
+                  <td>
+                    <form action="/super_admin/announcements/<%= a.announcement_id %>/delete" method="POST" class="delete-form">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button type="button" class="btn btn-danger btn-sm js-delete-announcement" data-name="<%= a.title %>">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <%- include('../partials/empty-state', { message: 'No announcements have been sent yet.' }) %>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.js-delete-announcement');
+    if (!btn) return;
+    confirmAction(btn.closest('form'), {
+      title: 'Delete this announcement?',
+      text: '"' + btn.dataset.name + '" will be permanently removed.',
+      icon: 'warning',
+      confirmText: 'Delete',
+      danger: true,
+    });
+  });
+</script>
